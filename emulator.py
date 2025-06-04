@@ -32,42 +32,46 @@ class Arch242Emulator:
             self.PC += 1
             
     def execute(self):
+        # rot-r
         self.instruction = self.instructions[self.PC]
-        if self.instruction == 0x0000:
-            self.ACC = (self.ACC << 3) | (self.ACC >> 1)
-            
-        elif self.instruction == 0x0001:
-            self.ACC = (self.ACC >> 3) | (self.ACC << 1)
-            
-        elif self.instruction == 0x0002:
+        if self.instruction == 0x00:
+            self.ACC = (self.ACC << 3 & 0x0F) | (self.ACC >> 1)
+        
+        # rot-l
+        elif self.instruction == 0x01:
+            self.ACC = (self.ACC >> 3) | (self.ACC << 1 & 0x0F)
+        
+        # rot-rc
+        elif self.instruction == 0x02:
             cfacc = (self.CF << 4) | self.ACC
-            cfacc = (cfacc << 4) | (cfacc >> 1)
+            cfacc = (cfacc << 4 & 0x1F) | (cfacc >> 1)
             self.CF = cfacc >> 4
-            self.ACC = cfacc & 0b01111
-            
-        elif self.instruction == 0x0003:
+            self.ACC = cfacc & 0x0F
+        
+        # rot-lc
+        elif self.instruction == 0x03:
             cfacc = (self.CF << 4) | self.ACC
-            cfacc = (cfacc >> 4) | (cfacc << 1)
+            cfacc = (cfacc >> 4) | (cfacc << 1 & 0x1F)
             self.CF = cfacc >> 4
-            self.ACC = cfacc & 0b01111    
+            self.ACC = cfacc & 0x0F
             
-        elif self.instruction == 0x0004:
+        elif self.instruction == 0x04:
             ba = (self.RB << 4) | self.RA
             self.ACC = self.memory[ba]
             
-        elif self.instruction == 0x0005:
+        elif self.instruction == 0x05:
             ba = (self.RB << 4) | self.RA
             self.memory[ba] = self.ACC
             
-        elif self.instruction == 0x0006:
+        elif self.instruction == 0x06:
             dc = (self.RD << 4) | self.RC
             self.ACC = self.memory[dc]   
             
-        elif self.instruction == 0x0007:
+        elif self.instruction == 0x07:
             dc = (self.RD << 4) | self.RC
             self.memory[dc] = self.memory[dc]
             
-        elif self.instruction == 0x0008:
+        elif self.instruction == 0x08:
             ba = (self.RB << 4) | self.RA
             acc = self.ACC + self.memory[ba] + self.CF
             if acc >> 8:
@@ -76,7 +80,7 @@ class Arch242Emulator:
             else:
                 self.ACC = acc
                 
-        elif self.instruction == 0x0009:
+        elif self.instruction == 0x09:
             ba = (self.RB << 4) | self.RA
             acc = self.ACC + self.memory[ba]
             if acc >> 8:
@@ -85,7 +89,7 @@ class Arch242Emulator:
             else:
                 self.ACC = acc
                 
-        elif self.instruction == 0x000A:
+        elif self.instruction == 0x0A:
             ...
             
         self.step()
@@ -95,3 +99,14 @@ class Arch242Emulator:
     
 class EmulatorPyxel:
     ...
+    
+    
+test = Arch242Emulator([0x03])
+test.CF = 0b0
+test.ACC = 0b1000
+
+test.execute()
+
+print()
+print(test.CF)
+print(test.ACC)
