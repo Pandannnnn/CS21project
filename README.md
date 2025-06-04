@@ -27,3 +27,5 @@
 + and*-mba
 + xor*-mba
 + or*-mba
++ to-reg
++ from-reg

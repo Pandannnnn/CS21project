@@ -142,6 +142,21 @@ class Arch242Emulator:
             dc = (self.RD << 4) | self.RC
             self.memory[dc] -= 1
 
+
+        # REG INSTRUCTIONS (check 4 leftmost == 0b0001 and bits 2-4 <= 4 (4 registers))
+        # inc*-reg
+        elif (instruction >> 4 == 0x1) and (instruction & 0x01 == 0b0) and (instruction & 0x0E >> 1 <= 4):
+            reg = instruction & 0x0E >> 1
+            if 0 <= reg <= 4:
+                self.REG[reg] += 1
+                
+        # dec*-reg
+        elif (instruction >> 4 == 0x1) and (instruction & 0x01 == 0b1) and (instruction & 0x0E >> 1 <= 4):
+            reg = instruction & 0x0E >> 1
+            if 0 <= reg <= 4:
+                self.REG[reg] -= 1
+                
+
         # LOGICAL OPERATIONS (check 4 leftmost == 0b0001)
         # and-ba
         elif instruction == 0x1A:
@@ -174,18 +189,16 @@ class Arch242Emulator:
             self.memory[ba] = self.ACC | self.memory[ba]
         
         
-        # REG INSTRUCTIONS (check 4 leftmost == 0b0001 and bits 2-4 >= 4)
-        # inc*-reg
-        elif (instruction >> 4 == 0x1) & (instruction & 0x01 == 0b0):
-            reg = instruction & 0b00001110 >> 1
-            if 0 <= reg <= 4:
-                self.REG[reg] += 1
-                
-        # dec*-reg
-        elif (instruction >> 4 == 0x1) & (instruction & 0x01 == 0b1):
-            reg = instruction & 0b00001110 >> 1
-            if 0 <= reg <= 4:
-                self.REG[reg] -= 1
+        # REG to/from ACC OPERATION (4 leftmost == 0b0010 and bits 2-4 >= 4)
+        # to-reg
+        elif (instruction >> 4 == 0b0010) and (instruction & 0x01 == 0) and (instruction & 0x0E >> 1 <= 4):
+            reg = instruction & 0x0E >> 1
+            self.REG[reg] = self.ACC
+            
+        # from-reg
+        elif (instruction >> 4 == 0b0010) and (instruction & 0x01 == 1) and (instruction & 0x0E >> 1 <= 4):
+            reg = instruction & 0x0E >> 1
+            self.ACC = self.REG[reg]
             
             
         self.step()
