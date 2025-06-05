@@ -199,8 +199,154 @@ class Arch242Emulator:
         elif (instruction >> 4 == 0b0010) and (instruction & 0x01 == 1) and (instruction & 0x0E >> 1 <= 4):
             reg = instruction & 0x0E >> 1
             self.ACC = self.REG[reg]
-            
-            
+
+        #clr-cf    
+        elif instruction==0x2A:
+            self.CF=0
+        
+        #set-cf
+        elif instruction==0x2B:
+            self.CF=1
+        
+        #ret
+        elif instruction==0x2E:
+            self.PC=(self.PC&0x1000)|self.TEMP&0x0111
+            self.TEMP=0
+
+        #from-ioa
+        elif instruction==0x32:
+            self.ACC=self.IOA
+        
+        #inc
+        elif instruction==0x31:
+            self.ACC+=1
+        
+        #bcd
+        elif instruction==0x36:
+            if self.ACC>=10 or self.CF:
+                self.ACC+=6
+                self.CF=1
+        
+        #shutdown
+        elif instruction==0x37:
+            exit()
+        
+        #nop
+        elif instruction==0x3E:
+            ...
+        
+        #dec
+        elif instruction==0x3F:
+            self.ACC-=1
+
+        #add
+        elif instruction==0x40:
+            immediate=self.instructions[self.PC+1]
+            self.ACC+=immediate
+        
+        #sub
+        elif instruction==0x41:
+            immediate=self.instructions[self.PC+1]
+            self.ACC-=immediate
+        
+        #and
+        elif instruction==0x42:
+            immediate=self.instructions[self.PC+1]
+            self.ACC&=immediate
+
+        #xor
+        elif instruction==0x43:
+            immediate=self.instructions[self.PC+1]
+            self.ACC^=immediate
+        
+        #or
+        elif instruction==0x44:
+            immediate=self.instructions[self.PC+1]
+            self.ACC^=immediate
+
+        #r4
+        elif instruction==0x46:
+            immediate=self.instructions[self.PC+1]
+            self.REG[4]=immediate
+
+        #rarb 
+        elif (instruction>>4==0b0101):
+            ra_immediate=instruction&0x0F
+            rb_immediate=self.instructions[self.PC+1]
+            self.RA=ra_immediate
+            self.RB=rb_immediate
+        
+        #rcrd 
+        elif (instruction>>4==0b0110):
+            rc_immediate=instruction&0x0F
+            rd_immediate=self.instructions[self.PC+1]
+            self.RC=rc_immediate
+            self.RD=rd_immediate
+        
+        #acc
+        elif (instruction>>4==0b0111):
+            immediate=instruction&0x0F
+            self.ACC=immediate
+        
+        #b-bit  
+        elif(instruction>>5==0b100):
+            k=(instruction>>3) & 0x03
+            immediate= (instruction&0x07)<<8|self.instructions[self.PC+1]
+            if self.ACC>>k:
+                self.PC=(self.PC&0xF800)|immediate
+        
+        #bnz-a
+        elif(instruction>>3==0b10100):
+            immediate= (instruction&0x07)<<8|self.instructions[self.PC+1]
+            if self.RA!=0:
+                self.PC=(self.PC&0xF800)|immediate
+        
+        #bnz-B
+        elif(instruction>>3==0b10101):
+            immediate= (instruction&0x07)<<8|self.instructions[self.PC+1]
+            if self.RB!=0:
+                self.PC=(self.PC&0xF800)|immediate
+        
+        #beqz
+        elif(instruction>>3==0b10110):
+            immediate= (instruction&0x07)<<8|self.instructions[self.PC+1]
+            if self.ACC!=0:
+                self.PC=(self.PC&0xF800)|immediate
+        
+        #bnez
+        elif(instruction>>3==0b10111):
+            immediate= (instruction&0x07)<<8|self.instructions[self.PC+1]
+            if self.ACC==0:
+                self.PC=(self.PC&0xF800)|immediate
+        
+        #beqz-cf
+        elif(instruction>>3==0b11000):
+            immediate= (instruction&0x07)<<8|self.instructions[self.PC+1]
+            if self.CF==0:
+                self.PC=(self.PC&0xF800)|immediate
+        
+        #beqz-cf
+        elif(instruction>>3==0b11001):
+            immediate= (instruction&0x07)<<8|self.instructions[self.PC+1]
+            if self.CF!=0:
+                self.PC=(self.PC&0xF800)|immediate
+        
+        #bnz-d
+        elif(instruction>>3==0b11011):
+            immediate= (instruction&0x07)<<8|self.instructions[self.PC+1]
+            if self.RD!=0:
+                self.PC=(self.PC&0xF800)|immediate
+        
+        #b
+        elif(instruction>>4==0b1110):
+            immediate= (instruction&0x0F)<<8|self.instructions[self.PC+1]
+            self.PC=(self.PC&0xF000)|immediate
+        
+        #call
+        elif(instruction>>4==0b1111):
+            immediate= (instruction&0x0F)<<8|self.instructions[self.PC+1]
+            self.PC=(self.PC&0xF000)|immediate
+        
         self.step()
         
             
@@ -216,7 +362,7 @@ test = Arch242Emulator([0x0A])
 test.CF = 0b0
 test.ACC = 0x1
 test.RA = 0x0
-test.RB = 0x1
+test.RB=0x1
 test.memory[0x01] = 0
 test.memory[0x10] = 2
 
