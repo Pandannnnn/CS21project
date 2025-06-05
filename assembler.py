@@ -231,10 +231,3 @@ class Arch242Assembler:
                     output.write(f"{bits:04x}\n")
         
         
-test=Arch242Assembler()
-args=sys.argv
-if len(args)!=3:
-    print("Usage: python assembler.py <asmfile> <format>")
-_,asmfile,format=args
-test.parse_asmfile(asmfile,format)
-
