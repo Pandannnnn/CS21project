@@ -1,4 +1,5 @@
-import pyxel
+import pyxel,sys
+from assembler import Arch242Assembler
 
 
 class Arch242Emulator:
@@ -347,6 +348,11 @@ class Arch242Emulator:
             immediate= (instruction&0x0F)<<8|self.instructions[self.PC+1]
             self.PC=(self.PC&0xF000)|immediate
         
+        #invalid instruction from .byte
+        else:
+            print("Wrong Instruction!")
+            exit()
+
         self.step()
         
             
@@ -373,3 +379,11 @@ print(bin(test.ACC))
 print(test.ACC)
 print(test.ACC & 0x0F)
 print(test.CF)
+
+
+test2=Arch242Assembler()
+args=sys.argv
+if len(args)!=3:
+    print("Usage: python assembler.py <asmfile> <format>")
+_,asmfile,format=args
+test2.parse_asmfile(asmfile,format)
