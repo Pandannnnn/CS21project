@@ -435,7 +435,11 @@ class EmulatorPyxel:
         self.update_Arch242Cycle()
         
     def update_Arch242Cycle(self):
-        self.emulator.execute()
+        try:
+            self.emulator.execute()
+        except:
+            print("Invalid Instruction! / .byte")
+            
         self.emulator.step()
         
         
