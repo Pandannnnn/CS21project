@@ -10,10 +10,11 @@ class Arch242Emulator:
         self.memory = [0] * 256
         
         # Registers
-        self.RA = self.RB = self.RC = self.RD = self.RE = 0
-        self.ACC = 0
-        self.CF = 0
-        self.IOA = self.IOB = self.IOC = 0
+        self.RA = self.RB = self.RC = self.RD = self.RE = 0x0
+        self.ACC = 0x0
+        self.CF = 0b0
+        self.TEMP = 0
+        self.IOA = 0x0
         
         self.REG = {
             0 : self.RA,
@@ -23,11 +24,6 @@ class Arch242Emulator:
             4 : self.RE
         }
     
-        # Timer
-        self.TIMER = 0
-        self.timer_running = False
-        
-        self.TEMP = 0
         self.instructions = instructions
         
     def step(self):
