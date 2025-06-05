@@ -1,5 +1,6 @@
 import pyxel,sys
 from assembler import Arch242Assembler
+from collections import deque
 
 
 class Arch242Emulator:
@@ -371,18 +372,111 @@ class Arch242Emulator:
 
         self.step()
         
-            
-                  
-    
+
+
+#############
+# Constants #
+#############
+
+COL_BACKGROUND = 3
+COL_BODY = 11
+COL_HEAD = 7
+COL_DEATH = 8
+COL_APPLE = 8
+
+TEXT_DEATH = ["GAME OVER", "(Q)UIT", "(R)ESTART"]
+COL_TEXT_DEATH = 0
+HEIGHT_DEATH = 5
+
+HEIGHT_SCORE = pyxel.FONT_HEIGHT
+COL_SCORE = 6
+COL_SCORE_BACKGROUND = 5
+
 class EmulatorPyxel:
-    def __init__(self,emulator:Arch242Emulator):
-        self.emulator=emulator
+    def __init__(self, instructions):
+        self.emulator = Arch242Emulator(instructions)
+        
+        # LED MATRIX
         self.rows=20
         self.cols=10
+        self.start_address = 192
+        self.end_address = 241
+        self.cell_size = 5
+        
+        pyxel.init(
+            self.cols * self.cell_size, 
+            self.rows * self.cell_size, 
+            title="Arch-242 Emulator", 
+            fps=30, 
+            display_scale=12, 
+            capture_scale=6
+        )
+        sound_and_music()
+        pyxel.run(self.update, self.draw)
+        
+
+    ##############
+    # Game logic #
+    ##############
+        
     def update(self):
-        ...
+        # Input
+        self.emulator.IOA = 0b0000
+        if pyxel.btn(pyxel.KEY_UP) or pyxel.btn(pyxel.KEY_W):
+            self.emulator.IOA |= 0b0001
+        if pyxel.btn(pyxel.KEY_DOWN) or pyxel.btn(pyxel.KEY_S):
+            self.emulator.IOA |= 0b0010
+        if pyxel.btn(pyxel.KEY_LEFT) or pyxel.btn(pyxel.KEY_A):
+            self.emulator.IOA |= 0b0100
+        if pyxel.btn(pyxel.KEY_RIGHT) or pyxel.btn(pyxel.KEY_D):
+            self.emulator.IOA |= 0b1000
+            
+        # Execute and Step Arch242
+        self.update_Arch242Cycle()
+        
+    def update_Arch242Cycle(self):
+        self.emulator.execute()
+        self.emulator.step()
+        
+        
+    ##############
+    # Draw logic #
+    ##############
+    
     def draw(self):
-        ...
+        pyxel.cls(0)
+        
+        for addr in range(self.start_address, self.end_address + 1):
+            memory_offset = addr - self.start_address
+            led_row = memory_offset // 5
+            base_col = led_row * 4
+            
+            value = self.emulator.memory[addr] & 0x0F
+            
+            for bit in range(4):
+                led_col = base_col + bit
+                
+                is_on = (value >> bit) & 1
+                color = 7 if is_on else 1
+                pyxel.rect(
+                    led_col * self.cell_size,
+                    led_row * self.cell_size,
+                    self.cell_size,
+                    self.cell_size,
+                    color
+                )
+        
+        
+        
+###########################
+# Music and sound effects #
+###########################
+
+def sound_and_music():
+    ...
+        
+
+
 # Testing Grounds
 """
 test = Arch242Emulator([0x0A])
@@ -402,6 +496,7 @@ print(test.ACC & 0x0F)
 print(test.CF)
 """
 
+"""
 test2=Arch242Assembler()
 args=sys.argv
 if len(args)!=2:
@@ -415,3 +510,4 @@ with open("output.txt","r") as f:
 
 emulate=Arch242Emulator(instructions)
 
+"""
