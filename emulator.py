@@ -359,11 +359,12 @@ class Arch242Emulator:
                   
     
 class EmulatorPyxel:
-    ...
+    def __init__(self,emulator:Arch242Emulator):
+        ...
     
 
 # Testing Grounds
-
+"""
 test = Arch242Emulator([0x0A])
 test.CF = 0b0
 test.ACC = 0x1
@@ -379,11 +380,18 @@ print(bin(test.ACC))
 print(test.ACC)
 print(test.ACC & 0x0F)
 print(test.CF)
-
+"""
 
 test2=Arch242Assembler()
 args=sys.argv
-if len(args)!=3:
-    print("Usage: python assembler.py <asmfile> <format>")
-_,asmfile,format=args
-test2.parse_asmfile(asmfile,format)
+if len(args)!=2:
+    print("Usage: python emulator.py <asmfile>")
+_,asmfile=args
+test2.parse_asmfile(asmfile,"bin")
+instructions=[]
+with open("output.txt","r") as f:
+    for line in f:
+        instructions.append(int(line,2))
+
+emulate=Arch242Emulator(instructions)
+emulate.execute()
