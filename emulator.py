@@ -43,7 +43,7 @@ class Arch242Emulator:
             
     def execute(self):
         instruction = self.instructions[self.PC]
-        
+        print(self.PC)
         # SIMPLE OPERATIONS (check for 4 leftmost bits == 0b0000)
         # rot-r
         if instruction == 0x00:
@@ -348,6 +348,7 @@ class Arch242Emulator:
             immediate= (instruction&0x0F)<<8|self.instructions[self.PC+1]
             self.PC=(self.PC&0xF000)|immediate
         
+      
         #invalid instruction from .byte
         else:
             print("Invalid Instruction!")
@@ -363,7 +364,10 @@ class EmulatorPyxel:
         self.emulator=emulator
         self.rows=20
         self.cols=10
-
+    def update(self):
+        ...
+    def draw(self):
+        ...
 # Testing Grounds
 """
 test = Arch242Emulator([0x0A])
@@ -395,5 +399,4 @@ with open("output.txt","r") as f:
         instructions.append(int(line,2))
 
 emulate=Arch242Emulator(instructions)
-emulate.execute()
-print(emulate.ACC)
+
