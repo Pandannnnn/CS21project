@@ -350,7 +350,7 @@ class Arch242Emulator:
         
         #invalid instruction from .byte
         else:
-            print("Wrong Instruction!")
+            print("Invalid Instruction!")
             exit()
 
         self.step()
@@ -360,8 +360,9 @@ class Arch242Emulator:
     
 class EmulatorPyxel:
     def __init__(self,emulator:Arch242Emulator):
-        ...
-    
+        self.emulator=emulator
+        self.rows=20
+        self.cols=10
 
 # Testing Grounds
 """
@@ -395,3 +396,4 @@ with open("output.txt","r") as f:
 
 emulate=Arch242Emulator(instructions)
 emulate.execute()
+print(emulate.ACC)
