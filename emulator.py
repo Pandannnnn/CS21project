@@ -32,6 +32,7 @@ class Arch242Emulator:
             
     def execute(self):
         instruction = self.instructions[self.PC]
+       
         
         # REG INSTRUCTIONS (check 4 leftmost == 0b0001 and bits 2-4 <= 4 (4 registers))
         if ((instruction >> 4) == 0x01) and (((instruction & 0x0E) >> 1) <= 4):
@@ -257,7 +258,7 @@ class Arch242Emulator:
             # from-mdc
             elif instruction == 0x06:
                 dc = (self.RD << 4) | self.RC
-                self.ACC = self.memory[dc]   
+                self.ACC = self.memory[dc] &0x0F 
             
             # to-mdc
             elif instruction == 0x07:
@@ -436,15 +437,15 @@ class EmulatorPyxel:
         self.emulator = Arch242Emulator(instructions)
         
         # LED MATRIX
-        self.rows=20
-        self.cols=10
+        self.rows=10
+        self.cols=20
         self.start_address = 192
         self.end_address = 241
         self.cell_size = 3
         
         pyxel.init(
-            self.cols * self.cell_size, 
-            self.rows * self.cell_size, 
+            self.cols * self.cell_size +10, 
+            self.rows * self.cell_size , 
             title="Arch-242 Emulator", 
             fps=30, 
             display_scale=12, 
@@ -491,7 +492,10 @@ class EmulatorPyxel:
                 led_row = led_index // 20  
                 led_col = led_index % 20   
                 is_on = (value >> bit) & 1
-                color = 7 if is_on else 1
+                color = 7 if is_on else 2
+                if is_on:
+                    ...
+                    #print(addr,led_col,led_row)
                 pyxel.rect(
                     led_col * self.cell_size,
                     led_row * self.cell_size,
@@ -499,6 +503,8 @@ class EmulatorPyxel:
                     self.cell_size,
                     color
                 )
+      
+        
         
 ###########################
 # Music and sound effects #
@@ -511,11 +517,10 @@ def sound_and_music():
 
 
 
-"""
 test2=Arch242Assembler()
 args=sys.argv
 if len(args)!=2:
-    print("Usage: python emulator.py <asmfile>")
+    print("Usage: python3 emulator.py <asmfile>")
 _,asmfile=args
 test2.parse_asmfile(asmfile,"bin")
 instructions=[]
@@ -526,4 +531,3 @@ with open("output.txt","r") as f:
 emulate=EmulatorPyxel(instructions)
 
 
-"""

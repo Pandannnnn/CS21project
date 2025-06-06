@@ -54,8 +54,8 @@ class Arch242Assembler:
 
 
         #imm (0-255)
-        "rarb":lambda r:[0x50|(r&0x01),r>>4 &0x0F],
-        "rcrd":lambda r:[0x60|(r&0x01),r>>4 &0x0F],
+        "rarb":lambda r:[0x50|(r&0x0F),r>>4 &0x0F],
+        "rcrd":lambda r:[0x60|(r&0x0F),r>>4 &0x0F],
         
         #imm(0-2047)
         "b-bit":lambda k,r:[0x80|k<<3|(r>>8&0x07),r&0xFF], #k (0-3)
@@ -157,11 +157,14 @@ class Arch242Assembler:
                             if length!=2:
                                 raise ValueError("Instruction not valid! Line {}".format(idx))
                             immediate=instruction_line[1].lower()
+                           
                             if immediate[:2]=="0x":
                                 immediate=int(immediate,16)
                             else:
                                 immediate=int(immediate)
+                            
                             assert 0<=immediate<=255,"immediate should be between 0-255"
+                            
                             encoding.extend(self.instruction_set[instruction](immediate))
                             current_pc+=len(self.instruction_set[instruction](immediate))
 
