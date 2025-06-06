@@ -15,7 +15,7 @@ class Arch242Emulator:
         self.ACC = 0x0
         self.CF = 0b0
         self.TEMP = 0
-        self.IOA = 0x0
+        self.IOA:int= 0x0
         
         self.instructions = instructions
         
@@ -32,7 +32,7 @@ class Arch242Emulator:
             
     def execute(self):
         instruction = self.instructions[self.PC]
-        print(self.PC)
+       
         
         # REG INSTRUCTIONS (check 4 leftmost == 0b0001 and bits 2-4 <= 4 (4 registers))
         if ((instruction >> 4) == 0x01) and (((instruction & 0x0E) >> 1) <= 4):
@@ -210,10 +210,10 @@ class Arch242Emulator:
                     self.step()
         
         #b
-        elif(instruction>>4==0b1110):
+        elif(instruction>>4==0b1110):   
             immediate= ((instruction&0x0F)<<8)|self.instructions[self.PC+1]
             self.PC=(self.PC&0xF000)|immediate
-        
+            
         #call
         elif(instruction>>4==0b1111):
             self.TEMP = self.PC + 2
@@ -441,7 +441,7 @@ class EmulatorPyxel:
         self.cols=10
         self.start_address = 192
         self.end_address = 241
-        self.cell_size = 5
+        self.cell_size = 3
         
         pyxel.init(
             self.cols * self.cell_size, 
@@ -454,16 +454,15 @@ class EmulatorPyxel:
         sound_and_music()
         pyxel.run(self.update, self.draw)
         
-
     ##############
     # Game logic #
     ##############
         
     def update(self):
         # Input
+       
         self.emulator.IOA = 0b0000
         if pyxel.btn(pyxel.KEY_UP) or pyxel.btn(pyxel.KEY_W):
-          
             self.emulator.IOA |= 0b0001
         if pyxel.btn(pyxel.KEY_DOWN) or pyxel.btn(pyxel.KEY_S):
             self.emulator.IOA |= 0b0010
@@ -471,35 +470,28 @@ class EmulatorPyxel:
             self.emulator.IOA |= 0b0100
         if pyxel.btn(pyxel.KEY_RIGHT) or pyxel.btn(pyxel.KEY_D):
             self.emulator.IOA |= 0b1000
-            
         # Execute and Step Arch242
         self.update_Arch242Cycle()
         
     def update_Arch242Cycle(self):
         try:
-            self.emulator.execute()
+            if(self.emulator.PC<len(self.emulator.instructions)):
+                self.emulator.execute()
         except:
             print("Invalid Instruction! / .byte")
             
-    
-
     ##############
     # Draw logic #
     ##############
-    
     def draw(self):
         pyxel.cls(0)
-        
         for addr in range(self.start_address, self.end_address + 1):
-            memory_offset = addr - self.start_address
-            led_row = memory_offset // 5
-            base_col = led_row * 4
-            
             value = self.emulator.memory[addr] & 0x0F
-            
+            bit_offset = (addr - self.start_address) * 4
             for bit in range(4):
-                led_col = base_col + bit
-                
+                led_index = bit_offset + bit
+                led_row = led_index // 20  
+                led_col = led_index % 20   
                 is_on = (value >> bit) & 1
                 color = 7 if is_on else 1
                 pyxel.rect(
@@ -509,8 +501,7 @@ class EmulatorPyxel:
                     self.cell_size,
                     color
                 )
-        
-        
+
         
 ###########################
 # Music and sound effects #
@@ -518,27 +509,9 @@ class EmulatorPyxel:
 
 def sound_and_music():
     ...
-        
-
 
 # Testing Grounds
-"""
-test = Arch242Emulator([0x0A])
-test.CF = 0b0
-test.ACC = 0x1
-test.RA = 0x0
-test.RB=0x1
-test.memory[0x01] = 0
-test.memory[0x10] = 2
 
-test.execute()
-
-print()
-print(bin(test.ACC))
-print(test.ACC)
-print(test.ACC & 0x0F)
-print(test.CF)
-"""
 
 
 test2=Arch242Assembler()
@@ -553,4 +526,5 @@ with open("output.txt","r") as f:
         instructions.append(int(line,2))
 
 emulate=EmulatorPyxel(instructions)
+
 

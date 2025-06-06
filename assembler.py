@@ -103,11 +103,11 @@ class Arch242Assembler:
                         continue
                     instruction=instruction_line[0]
                     
-
                     if instruction not in self.instruction_set and length==1 and instruction[-1]==":": #if label
                         
                         label[instruction[:-1]]=current_pc #remove : character
-
+                    elif instruction not in self.instruction_set:
+                        continue
                     elif not callable(self.instruction_set[instruction]) and length==1 and instruction!=".byte": 
                         encoding.extend(self.instruction_set[instruction])
                         current_pc+=len(self.instruction_set[instruction])
@@ -213,7 +213,7 @@ class Arch242Assembler:
                                     immediate=int(immediate)
                             assert 0<=immediate<=4095,"immediate should be between 0-4095"
                             encoding.extend(self.instruction_set[instruction](immediate))
-                            current_pc+=len(self.instruction_set[instruction])
+                            current_pc+=len(self.instruction_set[instruction](immediate))
 
                         else:
                             raise ValueError("Instruction not valid! Line {}".format(idx))
