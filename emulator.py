@@ -32,7 +32,6 @@ class Arch242Emulator:
             
     def execute(self):
         instruction = self.instructions[self.PC]
-       
         
         # REG INSTRUCTIONS (check 4 leftmost == 0b0001 and bits 2-4 <= 4 (4 registers))
         if ((instruction >> 4) == 0x01) and (((instruction & 0x0E) >> 1) <= 4):
@@ -460,7 +459,6 @@ class EmulatorPyxel:
         
     def update(self):
         # Input
-       
         self.emulator.IOA = 0b0000
         if pyxel.btn(pyxel.KEY_UP) or pyxel.btn(pyxel.KEY_W):
             self.emulator.IOA |= 0b0001
@@ -501,7 +499,6 @@ class EmulatorPyxel:
                     self.cell_size,
                     color
                 )
-
         
 ###########################
 # Music and sound effects #
@@ -514,6 +511,7 @@ def sound_and_music():
 
 
 
+"""
 test2=Arch242Assembler()
 args=sys.argv
 if len(args)!=2:
@@ -528,3 +526,4 @@ with open("output.txt","r") as f:
 emulate=EmulatorPyxel(instructions)
 
 
+"""
