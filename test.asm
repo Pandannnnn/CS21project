@@ -1,6 +1,3 @@
-add 5
-label:
-rot-r
-rot-l
-
-.byte 0x38
+rarb 192
+inc*-mba
+b 2
