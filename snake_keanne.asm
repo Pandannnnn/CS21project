@@ -1,5 +1,7 @@
 # -- Initial --
 rarb 214    # Mat Addr
+acc 14
+to-mba
 
 rcrd 16     # Seg1 (Tail)
 from-reg 0  # Mat Addr 1/2
@@ -7,7 +9,7 @@ to-mdc
 rcrd 17
 from-reg 1  # Mat Addr 2/2
 to-mdc
-acc 4       # 0100 Segment
+acc 2       # 0100 Segment
 rcrd 18
 to-mdc
 
@@ -28,7 +30,7 @@ rcrd 20
 from-reg 1  # Mat Addr 2/2
 to-mdc
 rcrd 21
-acc 2       # 0010 Segment
+acc 4       # 0010 Segment
 to-mdc
 
 rcrd 22     # Seg3 (Head)
@@ -38,7 +40,7 @@ rcrd 23
 from-reg 1  # Mat Addr 2/2
 to-mdc
 rcrd 24
-acc 1       # 0001 Segment
+acc 8       # 0001 Segment
 to-mdc
 
 rcrd 22     # Store Addr of Head
@@ -104,31 +106,117 @@ move_left:
 b game_loop
 
 move_right:
-# Get address of head to Reg C and D
-call get_head_add
+call retrieve_head
+# Check if pixel is on rightmost of column set
+call check_right_pixel  # Moves to next address of matrix if on edge
+
+# Add New Head Pixel
+from-reg 4
+rot-l
+or*-mba
+to-reg 4
+nop 
+
+# Add New Head Address to Deque
+call next_address_dc    # Get the address +1 of head
+from-reg 0              # 1/2 addr of led matrix
+to-mdc                  # Store in new head 1/2 addr
+from-reg 1              
+rarb 9
+to-mba                  # Temp store 2/2 led matrix addr to mem[9]
+rarb 5                  # Mem index of 1/2 head pointer
+from-reg 2              # Current 1/2 head addr
+to-mba                  # Store
+rarb 6
+from-reg 3
+to-mba
+from-mdc
+to-reg 0
+call next_address_dc    
+rarb 9
+from-mba                # Retrieve temp stored 2/2 led matrix RE
+to-mdc                  # Store in 2/2 head addr
+to-reg 1
+call next_address_dc
+from-reg 4
+to-mdc
+
+b game_loop
+
+# -- FUNCTIONS --
+retrieve_head:
+# Output = Head Address: RA&RB, Segment: RE
+
+# Get 1/2 address of head to RC&RD
+rarb 5
+from-mba
+to-reg 2
+rarb 6
+from-mba
+to-reg 3
 from-mdc
 to-reg 0    # Store 1/2 Address to A
-call next_address
+
+# Get 2/2 address of head to RC&RD
+from-reg 2
+sub 15
+beqz inc_2nd
+inc*-reg 2
+bnez retrieve_head_skip_1
+# If Overflow
+inc_2nd:
+inc*-reg 2
+inc*-reg 3
+retrieve_head_skip_1:
 from-mdc
 to-reg 1    # Store 2/2 Address to B
-call next_address
+
+# Get Segment Value to RE
+from-reg 2
+sub 15
+beqz inc_2nd
+inc*-reg 2
+bnez retrieve_head_skip_2
+# If Overflow
+inc_2nd:
+inc*-reg 2
+inc*-reg 3
+retrieve_head_skip_2:
 from-mdc
 to-reg 4    # Store val to E
-
-# Check if pixel is on rightmost of column set
-call check_right_pixel
-
-# Get address of 
-rarb 0
-from-mba
-and 1
-bnez right_mem
+ret
+# ------------
 
 
-right_mem:
+check_right_pixel:
+# Input: Segment: RE
+# Output: Head Address: 
+from-reg 4
+and 8
+
+bnez col_right
+ret
+
+col_right:
+from-reg 0
+sub 15
+beqz inc_2nd_mem
+inc*-reg 0
+ret
 
 
-get_head_add:
+inc_2nd_mem:
+inc*-reg 0
+inc*-reg 1
+ret
+# ------------
+
+
+# -- Copy Pasta Function Subparts -- (Used for building functions)
+
+get_head_add:   
+# Output = Head Address: RC & RD
+
 rarb 5
 from-mba
 to-reg 2
@@ -136,31 +224,44 @@ rarb 6
 from-mba
 to-reg 3
 ret
+# ------------
 
-next_address:
+
+get_tail_add:
+rarb 7
+from-mba
+to-reg 2
+rarb 8
+from-mba
+to-reg 3
+ret
+# ------------
+
+
+next_address_dc:   
+# Input = Head/Tail Address RC&RD
+# Output = Head/Tail Address RC&RD
+
+from-reg 3
+sub 3
+bnez next_address_resume_dc
+from-reg 2
+sub 4
+beqz reset_deque_dc
+
+next_address_resume_dc:
 from-reg 2
 sub 15
-beq inc_2nd
 inc*-reg 2
-ret
-
-inc_2nd:
-inc*-reg 2
+bnez next_address_skip_dc
 inc*-reg 3
+next_address_skip_dc:
 ret
 
-check_right_pixel:
-from-reg 4
-and 1
-bnez col_right
-
-col_right:
-from-reg 0
-sub 15
-beq inc_2nd_mem
-inc*-reg 
-
-inc_2nd_mem:
-inc*-reg 0
-inc*-reg 1
-ret
+reset_deque_dc:
+acc 15
+to-reg 2
+acc 0
+to-reg 3
+b next_address_resume_dc
+# ------------
