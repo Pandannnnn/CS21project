@@ -65,7 +65,6 @@ class Arch242Assembler:
         "bnez":lambda r:[0xB8|(r>>8 &0x07),r&0xFF],
         "beqz-cf":lambda r:[0xC0|(r>>8 &0x07),r&0xFF],
         "bnez-cf":lambda r:[0xC8|(r>>8 &0x07),r&0xFF],
-        "b-timer":lambda r:[0xD0|(r>>8 &0x07),r&0xFF],
         "bnz-d":lambda r:[0xD8|(r>>8 &0x07),r&0xFF],
 
         #imm(0-4095)
@@ -75,10 +74,113 @@ class Arch242Assembler:
         #byte
         ".byte":lambda r:[r]
         }
+    def is_label(self,length,instruction):
+        if length==1 and instruction[-1]==":":
+            return True
+        return False
+    def get_labels(self,filename,format):
+        current_pc=0x0000
+        label={}
+
+        register_instructions=["inc*-reg","dec*-reg","to-reg","from-reg"]
+        imm_4bits=["add","sub","and","xor","or","r4","acc"]
+        imm_8bits=["rarb","rcrd"]
+        imm_11bits=["b-bit","bnz-a","bnz-b","beqz","bnez","beqz-cf","bnez-cf","bnz-d"]
+        imm_12bits=["b","call"]
+
+        if not filename.endswith('.asm'):
+            raise ValueError("Input File must have an .asm extension")
+        if format not in ["bin","hex"]:
+            raise ValueError("Invalid Format!")
+        
+        with open (filename,"r") as f:
+            for idx,line in enumerate(f):
+                comment=line.find("#")
+                if comment!=-1:
+                    instruction_line=line[:comment].strip().split()
+                else:instruction_line=line.strip().split()
+                try:
+                    length=len(instruction_line)
+                    if not length:
+                        continue
+                    instruction=instruction_line[0]
+                    if self.is_label(length,instruction): #if label
+                        label[instruction[:-1]]=current_pc #remove : character
+                    elif instruction not in self.instruction_set:
+                        continue
+                    elif not callable(self.instruction_set[instruction]) and length==1 and instruction!=".byte": 
+                        #encoding.extend(self.instruction_set[instruction])
+                        current_pc+=len(self.instruction_set[instruction])
+                    
+                    elif instruction==".byte":
+                        if length!=2:
+                            raise ValueError("Instruction not valid! Line {}".format(idx))
+                        immediate=instruction_line[1].lower()
+                        if immediate[:2]=="0x":
+                            immediate=int(immediate,16)
+                        else:
+                            immediate=int(immediate)
+                        assert 0<=immediate<=255,"immediate should be between 0-255"
+                        #encoding.extend(self.instruction_set[instruction](immediate))
+                        current_pc+=len(self.instruction_set[instruction](immediate))
+
+                    else:
+
+                        if instruction in register_instructions: #0-3
+                            if length!=2:
+                                raise ValueError("Instruction not valid! Line {}".format(idx))
+                            immediate=instruction_line[1].lower()
+                            if immediate[:2]=="0x":
+                                immediate=int(immediate,16)
+                            else:
+                                immediate=int(immediate)
+                            assert 0<=immediate<=4 ,"immediate should be between 0-4"
+                            #encoding.extend(self.instruction_set[instruction](immediate))
+                            current_pc+=len(self.instruction_set[instruction](immediate))
+
+
+                        elif instruction in imm_4bits:
+
+                            if length!=2:
+                                raise ValueError("Instruction not valid! Line {}".format(idx))
+                            immediate=instruction_line[1].lower()
+                            if immediate[:2]=="0x":
+                                immediate=int(immediate,16)
+                            else:
+                                immediate=int(immediate)
+                            assert 0<=immediate<=15,"immediate should be between 0-15"
+                            #encoding.extend(self.instruction_set[instruction](immediate))
+                            current_pc+=len(self.instruction_set[instruction](immediate))
+
+
+                        elif instruction in imm_8bits:
+                            if length!=2:
+                                raise ValueError("Instruction not valid! Line {}".format(idx))
+                            immediate=instruction_line[1].lower()
+                           
+                            if immediate[:2]=="0x":
+                                immediate=int(immediate,16)
+                            else:
+                                immediate=int(immediate)
+                            
+                            assert 0<=immediate<=255,"immediate should be between 0-255"
+                            
+                            #encoding.extend(self.instruction_set[instruction](immediate))
+                            current_pc+=len(self.instruction_set[instruction](immediate))
+                        elif instruction in imm_11bits:
+                            current_pc+=2
+                        elif instruction in imm_12bits:
+                            current_pc+=2
+                        else:
+                            raise ValueError("Instruction not valid! Line {}".format(idx))
+                
+                except:
+                    raise ValueError("Instruction not valid! Line {}".format(idx))
+        return label
     def parse_asmfile(self,filename,format):
         current_pc=0x0000
         encoding=[]
-        label={}
+        label=self.get_labels(filename,format)
 
         register_instructions=["inc*-reg","dec*-reg","to-reg","from-reg"]
         imm_4bits=["add","sub","and","xor","or","r4","acc"]
@@ -102,16 +204,12 @@ class Arch242Assembler:
                     if not length:
                         continue
                     instruction=instruction_line[0]
-                    
-                    if instruction not in self.instruction_set and length==1 and instruction[-1]==":": #if label
-                        
-                        label[instruction[:-1]]=current_pc #remove : character
-                    elif instruction not in self.instruction_set:
-                        continue
+                    if instruction not in self.instruction_set:
+                        continue 
                     elif not callable(self.instruction_set[instruction]) and length==1 and instruction!=".byte": 
                         encoding.extend(self.instruction_set[instruction])
                         current_pc+=len(self.instruction_set[instruction])
-
+                    
                     elif instruction==".byte":
                         if length!=2:
                             raise ValueError("Instruction not valid! Line {}".format(idx))
@@ -134,7 +232,7 @@ class Arch242Assembler:
                                 immediate=int(immediate,16)
                             else:
                                 immediate=int(immediate)
-                            assert 0<=immediate<=3 ,"immediate should be between 0-3"
+                            assert 0<=immediate<=4 ,"immediate should be between 0-4"
                             encoding.extend(self.instruction_set[instruction](immediate))
                             current_pc+=len(self.instruction_set[instruction](immediate))
 
@@ -175,6 +273,7 @@ class Arch242Assembler:
                                 immediate=instruction_line[1]
                                 if immediate in label:
                                     immediate=label[immediate]
+                                
                                 else:
                                     immediate=immediate.lower()
                                     if immediate[:2]=="0x":

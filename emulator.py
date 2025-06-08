@@ -26,13 +26,13 @@ class Arch242Emulator:
         if inst_str == 0x07:
             self.PC += 1
         if inst_str >= 0x04:
+        elif inst_str >= 0x04:
             self.PC += 2
         else:
             self.PC += 1
             
     def execute(self):
         instruction = self.instructions[self.PC]
-       
         
         # REG INSTRUCTIONS (check 4 leftmost == 0b0001 and bits 2-4 <= 4 (4 registers))
         if ((instruction >> 4) == 0x01) and (((instruction & 0x0E) >> 1) <= 4):
@@ -417,16 +417,6 @@ class Arch242Emulator:
 #############
 # Constants #
 #############
-
-COL_BACKGROUND = 3
-COL_BODY = 11
-COL_HEAD = 7
-COL_DEATH = 8
-COL_APPLE = 8
-
-TEXT_DEATH = ["GAME OVER", "(Q)UIT", "(R)ESTART"]
-COL_TEXT_DEATH = 0
-HEIGHT_DEATH = 5
 
 HEIGHT_SCORE = pyxel.FONT_HEIGHT
 COL_SCORE = 6
