@@ -140,7 +140,6 @@ call next_address_dc
 from-reg 4
 to-mdc
 
-nop
 b game_loop
 
 # -- FUNCTIONS --
