@@ -25,7 +25,6 @@ class Arch242Emulator:
         inst_str = instruction >> 4
         if inst_str == 0x07:
             self.PC += 1
-        if inst_str >= 0x04:
         elif inst_str >= 0x04:
             self.PC += 2
         else:
@@ -40,21 +39,21 @@ class Arch242Emulator:
             if (instruction & 0x01) == 0b0:
                 reg = (instruction & 0x0E) >> 1
                 if 0 <= reg <= 4:
-                    if reg == 0: self.RA += 1
-                    elif reg == 1: self.RB += 1
-                    elif reg == 2: self.RC += 1
-                    elif reg == 3: self.RD += 1
-                    elif reg == 4: self.RE += 1
+                    if reg == 0: self.RA = (self.RA+1)&0x0F
+                    elif reg == 1: self.RB = (self.RB+1)&0x0F
+                    elif reg == 2: self.RC = (self.RC+1)&0x0F
+                    elif reg == 3: self.RD = (self.RD+1)&0x0F
+                    elif reg == 4: self.RE = (self.RE+1)&0x0F
             
             # dec*-reg
             elif (instruction & 0x01) == 0b1:
                 reg = (instruction & 0x0E) >> 1
                 if 0 <= reg <= 4:
-                    if reg == 0: self.RA -= 1
-                    elif reg == 1: self.RB -= 1
-                    elif reg == 2: self.RC -= 1
-                    elif reg == 3: self.RD -= 1
-                    elif reg == 4: self.RE -= 1    
+                    if reg == 0: self.RA = (self.RA-1)&0x0F
+                    elif reg == 1: self.RB = (self.RB-1)&0x0F
+                    elif reg == 2: self.RC = (self.RC-1)&0x0F
+                    elif reg == 3: self.RD = (self.RD-1)&0x0F
+                    elif reg == 4: self.RE = (self.RE-1)&0x0F   
                     
             self.step()           
 
@@ -87,27 +86,27 @@ class Arch242Emulator:
             # add
             if instruction==0x40:
                 immediate=self.instructions[self.PC+1]
-                self.ACC+=immediate
+                self.ACC=(self.ACC+immediate)&0x0F
             
             # sub
             elif instruction==0x41:
                 immediate=self.instructions[self.PC+1]
-                self.ACC-=immediate
+                self.ACC=(self.ACC-immediate)&0x0F
             
             # and
             elif instruction==0x42:
                 immediate=self.instructions[self.PC+1]
-                self.ACC&=immediate
+                self.ACC=(self.ACC&immediate)&0x0F
 
             # xor
             elif instruction==0x43:
                 immediate=self.instructions[self.PC+1]
-                self.ACC^=immediate
+                self.ACC=(self.ACC^immediate)&0x0F
             
             # or
             elif instruction==0x44:
                 immediate=self.instructions[self.PC+1]
-                self.ACC|=immediate
+                self.ACC=(self.ACC|immediate)&0x0F
 
             # r4
             elif instruction==0x46:
@@ -122,14 +121,14 @@ class Arch242Emulator:
             # rarb 
             if (instruction>>4==0b0101):
                 ra_immediate=instruction&0x0F
-                rb_immediate=self.instructions[self.PC+1]
+                rb_immediate=self.instructions[self.PC+1]&0x0F
                 self.RA=ra_immediate
                 self.RB=rb_immediate
             
             # rcrd 
             elif (instruction>>4==0b0110):
                 rc_immediate=instruction&0x0F
-                rd_immediate=self.instructions[self.PC+1]
+                rd_immediate=self.instructions[self.PC+1]&0x0F
                 self.RC=rc_immediate
                 self.RD=rd_immediate
             

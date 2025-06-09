@@ -115,7 +115,6 @@ from-reg 4
 rot-l
 or*-mba
 to-reg 4
-nop 
 
 # Add New Head Address to Deque
 call next_address_dc    # Get the address +1 of head
@@ -141,6 +140,7 @@ call next_address_dc
 from-reg 4
 to-mdc
 
+nop
 b game_loop
 
 # -- FUNCTIONS --
